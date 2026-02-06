@@ -1,15 +1,12 @@
 Zabbix Stress Agents deployed!
 
   Agents:    {{ .Values.agentCount }}
-  NodePorts: {{ .Values.nodePortStart }} - {{ add (int .Values.nodePortStart) (sub (int .Values.agentCount) 1) }}
+  Ports:     {{ .Values.portStart }} - {{ add (int .Values.portStart) (sub (int .Values.agentCount) 1) }}
   Server:    {{ .Values.zabbix.serverHost }}
   Metadata:  {{ .Values.zabbix.metadata }}
 
-Each agent pod (zabbix-agent-0 .. zabbix-agent-{{ sub (int .Values.agentCount) 1 }}) has a dedicated
-NodePort Service mapping to port 10050 inside the container.
+Pods use hostNetwork, so each agent binds directly on the node IP.
+The ServiceAccount is granted the hostnetwork-v2 SCC via RBAC.
 
 To list all agents:
   kubectl get pods -l app.kubernetes.io/name=zabbix-stress-agent -n {{ .Release.Namespace }}
-
-To list all services:
-  kubectl get svc -l app.kubernetes.io/name=zabbix-stress-agent -n {{ .Release.Namespace }}

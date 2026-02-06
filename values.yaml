@@ -14,10 +14,9 @@ zabbix:
   # Metadata string sent during autoregistration
   metadata: "stress-test"
 
-# NodePort configuration
-# Each agent gets nodePortStart + index (0-based)
-# Ensure the range doesn't exceed 32767
-nodePortStart: 30100
+# Port configuration
+# Each agent listens on portStart + index (0-based) on the host network
+portStart: 30100
 
 # Pod resource limits (kept low to pack many agents)
 resources:

@@ -1,17 +1,3 @@
-apiVersion: v1
-kind: Service
-metadata:
-  name: zabbix-agent-headless
-  labels:
-    app.kubernetes.io/name: zabbix-stress-agent
-spec:
-  clusterIP: None
-  selector:
-    app.kubernetes.io/name: zabbix-stress-agent
-  ports:
-    - port: 10050
-      name: zabbix-agent
----
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -29,6 +15,9 @@ spec:
       labels:
         app.kubernetes.io/name: zabbix-stress-agent
     spec:
+      serviceAccountName: zabbix-agent
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
       containers:
         - name: zabbix-agent
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
@@ -37,12 +26,8 @@ spec:
           args:
             - |
               ORDINAL=${HOSTNAME##*-}
-              export ZBX_LISTENPORT=$(({{ .Values.nodePortStart }} + ORDINAL))
+              export ZBX_LISTENPORT=$(({{ .Values.portStart }} + ORDINAL))
               exec /usr/bin/docker-entrypoint.sh /usr/sbin/zabbix_agentd --foreground -c /etc/zabbix/zabbix_agentd.conf
-          ports:
-            - containerPort: {{ .Values.nodePortStart }}
-              name: zabbix-agent
-              protocol: TCP
           env:
             - name: ZBX_SERVER_HOST
               value: {{ .Values.zabbix.serverHost | quote }}
@@ -54,25 +39,3 @@ spec:
                   fieldPath: metadata.name
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
-{{- range $i := until (int .Values.agentCount) }}
-{{- $nodePort := add (int $.Values.nodePortStart) $i }}
-{{- $podName := printf "zabbix-agent-%d" $i }}
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: {{ $podName }}-np
-  labels:
-    app.kubernetes.io/name: zabbix-stress-agent
-    app.kubernetes.io/instance: {{ $podName }}
-spec:
-  type: NodePort
-  selector:
-    statefulset.kubernetes.io/pod-name: {{ $podName }}
-  ports:
-    - port: {{ $nodePort }}
-      targetPort: {{ $nodePort }}
-      nodePort: {{ $nodePort }}
-      protocol: TCP
-      name: zabbix-agent
-{{- end }}
