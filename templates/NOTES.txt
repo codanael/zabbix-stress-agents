@@ -5,7 +5,8 @@ Zabbix Stress Agents deployed!
   Server:    {{ .Values.zabbix.serverHost }}
   Metadata:  {{ .Values.zabbix.metadata }}
 
-Each agent listens on its NodePort (ZBX_LISTENPORT = NodePort).
+Each agent pod (zabbix-agent-0 .. zabbix-agent-{{ sub (int .Values.agentCount) 1 }}) has a dedicated
+NodePort Service mapping to port 10050 inside the container.
 
 To list all agents:
   kubectl get pods -l app.kubernetes.io/name=zabbix-stress-agent -n {{ .Release.Namespace }}
