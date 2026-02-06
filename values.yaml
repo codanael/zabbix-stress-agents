@@ -3,7 +3,7 @@ agentCount: 10
 
 # Zabbix agent image
 image:
-  repository: zabbix/zabbix-agent
+  repository: registry.connect.redhat.com/zabbix/zabbix-agent-72
   tag: latest
   pullPolicy: IfNotPresent
 

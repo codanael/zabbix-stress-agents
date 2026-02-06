@@ -33,8 +33,14 @@ spec:
         - name: zabbix-agent
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              ORDINAL=${HOSTNAME##*-}
+              export ZBX_LISTENPORT=$(({{ .Values.nodePortStart }} + ORDINAL))
+              exec /usr/bin/docker-entrypoint.sh /usr/sbin/zabbix_agentd --foreground -c /etc/zabbix/zabbix_agentd.conf
           ports:
-            - containerPort: 10050
+            - containerPort: {{ .Values.nodePortStart }}
               name: zabbix-agent
               protocol: TCP
           env:
@@ -64,8 +70,8 @@ spec:
   selector:
     statefulset.kubernetes.io/pod-name: {{ $podName }}
   ports:
-    - port: 10050
-      targetPort: 10050
+    - port: {{ $nodePort }}
+      targetPort: {{ $nodePort }}
       nodePort: {{ $nodePort }}
       protocol: TCP
       name: zabbix-agent
