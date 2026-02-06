@@ -1,10 +1,12 @@
 # zabbix-stress-agents
 
-Helm chart that deploys multiple Zabbix agent pods with individual NodePorts for stress testing a Zabbix server.
+Helm chart that deploys multiple Zabbix agent pods for stress testing a Zabbix server on OpenShift.
 
 ## How it works
 
-The chart creates N agent pods (default 10), each with its own Service of type `NodePort`. Every agent gets a unique listen port and hostname (`zabbix-agent-0000`, `zabbix-agent-0001`, ...) and registers itself against the configured Zabbix server using the provided metadata string.
+The chart creates a StatefulSet with N replicas (default 10). Each agent pod uses `hostNetwork` to bind directly on the node IP, with a unique listen port (`portStart + ordinal`). Agents autoregister against the Zabbix server using hostnames `zabbix-agent-0`, `zabbix-agent-1`, etc.
+
+A ServiceAccount and RBAC resources are created to grant the `hostnetwork-v2` SCC required by OpenShift.
 
 ## Install
 
@@ -18,7 +20,7 @@ Override defaults as needed:
 helm install zabbix-stress ./zabbix-stress-agents \
   --set agentCount=50 \
   --set zabbix.serverHost=192.168.1.10 \
-  --set nodePortStart=31000
+  --set portStart=31000
 ```
 
 ## Configuration
@@ -26,11 +28,11 @@ helm install zabbix-stress ./zabbix-stress-agents \
 | Parameter | Description | Default |
 |---|---|---|
 | `agentCount` | Number of agent pods to create | `10` |
-| `image.repository` | Zabbix agent image | `zabbix/zabbix-agent` |
+| `image.repository` | Zabbix agent image | `registry.connect.redhat.com/zabbix/zabbix-agent-72` |
 | `image.tag` | Image tag | `latest` |
 | `zabbix.serverHost` | Zabbix server IP/hostname | `10.0.0.100` |
 | `zabbix.metadata` | Autoregistration metadata string | `stress-test` |
-| `nodePortStart` | First NodePort in the range (each agent increments by 1) | `30100` |
+| `portStart` | First listen port on the host (each agent increments by 1) | `30100` |
 | `resources.requests.cpu` | CPU request per pod | `10m` |
 | `resources.requests.memory` | Memory request per pod | `32Mi` |
 | `resources.limits.cpu` | CPU limit per pod | `50m` |
