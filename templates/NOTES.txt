@@ -1,0 +1,14 @@
+Zabbix Stress Agents deployed!
+
+  Agents:    {{ .Values.agentCount }}
+  NodePorts: {{ .Values.nodePortStart }} - {{ add (int .Values.nodePortStart) (sub (int .Values.agentCount) 1) }}
+  Server:    {{ .Values.zabbix.serverHost }}
+  Metadata:  {{ .Values.zabbix.metadata }}
+
+Each agent listens on its NodePort (ZBX_LISTENPORT = NodePort).
+
+To list all agents:
+  kubectl get pods -l app.kubernetes.io/name=zabbix-stress-agent -n {{ .Release.Namespace }}
+
+To list all services:
+  kubectl get svc -l app.kubernetes.io/name=zabbix-stress-agent -n {{ .Release.Namespace }}

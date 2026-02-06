@@ -1,0 +1,51 @@
+{{- range $i := until (int .Values.agentCount) }}
+{{- $nodePort := add (int $.Values.nodePortStart) $i }}
+{{- $name := printf "zabbix-agent-%04d" $i }}
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: {{ $name }}
+  labels:
+    app.kubernetes.io/name: zabbix-stress-agent
+    app.kubernetes.io/instance: {{ $name }}
+    agent-index: {{ quote $i }}
+spec:
+  containers:
+    - name: zabbix-agent
+      image: "{{ $.Values.image.repository }}:{{ $.Values.image.tag }}"
+      imagePullPolicy: {{ $.Values.image.pullPolicy }}
+      ports:
+        - containerPort: {{ $nodePort }}
+          name: zabbix-agent
+          protocol: TCP
+      env:
+        - name: ZBX_SERVER_HOST
+          value: {{ $.Values.zabbix.serverHost | quote }}
+        - name: ZBX_LISTENPORT
+          value: {{ quote $nodePort }}
+        - name: ZBX_METADATA
+          value: {{ $.Values.zabbix.metadata | quote }}
+        - name: ZBX_HOSTNAME
+          value: {{ $name }}
+      resources:
+        {{- toYaml $.Values.resources | nindent 8 }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $name }}
+  labels:
+    app.kubernetes.io/name: zabbix-stress-agent
+    app.kubernetes.io/instance: {{ $name }}
+spec:
+  type: NodePort
+  selector:
+    app.kubernetes.io/instance: {{ $name }}
+  ports:
+    - port: {{ $nodePort }}
+      targetPort: {{ $nodePort }}
+      nodePort: {{ $nodePort }}
+      protocol: TCP
+      name: zabbix-agent
+{{- end }}

@@ -1,0 +1,29 @@
+# Number of Zabbix agent pods to create
+agentCount: 10
+
+# Zabbix agent image
+image:
+  repository: zabbix/zabbix-agent
+  tag: latest
+  pullPolicy: IfNotPresent
+
+# Zabbix environment configuration
+zabbix:
+  # IP/hostname of the Zabbix server
+  serverHost: "10.0.0.100"
+  # Metadata string sent during autoregistration
+  metadata: "stress-test"
+
+# NodePort configuration
+# Each agent gets nodePortStart + index (0-based)
+# Ensure the range doesn't exceed 32767
+nodePortStart: 30100
+
+# Pod resource limits (kept low to pack many agents)
+resources:
+  requests:
+    cpu: "10m"
+    memory: "32Mi"
+  limits:
+    cpu: "50m"
+    memory: "64Mi"

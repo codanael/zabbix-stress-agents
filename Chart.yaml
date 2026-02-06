@@ -1,0 +1,6 @@
+apiVersion: v2
+name: zabbix-stress-agents
+description: Deploy multiple Zabbix agent pods with individual NodePorts for stress testing
+type: application
+version: 0.1.0
+appVersion: "7.0"
